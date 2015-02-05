@@ -6,3 +6,8 @@ FILES=internet.c interface.c
 NAME=interface
 ALL:
 	$(CC) $(PREF) $(DBG) $(FILES) -o $(NAME) $(SUFF)
+	
+debug:
+	$(CC) -g $(PREF) $(DBG) $(FILES) -o $(NAME) $(SUFF)
+clean:
+	rm \#*\# *~

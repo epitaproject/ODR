@@ -6,4 +6,5 @@
 #include <string.h>
 
 void download(char *src,char* des);
-void displaysdl(char*path);
+void displaysdl(char*path, SDL_Surface *screen);
+SDL_Surface *initsdl();

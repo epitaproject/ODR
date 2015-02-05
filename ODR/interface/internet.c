@@ -30,19 +30,25 @@ void download(char *src,char* des) {
     }
 }
 
-void displaysdl(char*path)
+SDL_Surface* initsdl()
 {
-    SDL_Rect rectangle;
-    rectangle.x=0;
-    rectangle.y=0;
+ 
   SDL_Init(SDL_INIT_VIDEO);
-  SDL_Surface *picture;
+  
   SDL_Surface *screen = SDL_SetVideoMode(800, 600, 32, SDL_HWSURFACE);
+  return screen;
+}
+  void displaysdl(char*path, SDL_Surface *screen)
+{
+   SDL_Surface *picture;
   picture= IMG_Load(path);
   
-  SDL_BlitSurface(picture, NULL,screen,&rectangle);
-
-    SDL_Flip(screen);
+  SDL_Rect rectangle;
+    rectangle.x=0;
+    rectangle.y=0;
+  
+    SDL_BlitSurface(picture, NULL,screen,&rectangle);
+    SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 /*
 int main(int argc, char* argv[])
