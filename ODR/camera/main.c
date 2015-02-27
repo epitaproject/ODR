@@ -161,7 +161,7 @@ int main()
 SDL_Surface *screen;
   screen=initsdl();
 int i = 0;
-while(true)
+while(1)
 {
     // télécharge l'image qui se trouve sur la camera IP(l'adresse ip de la caméra est 172.21.1.200)
     //une fois qu'on récupère l'image on peut la traiter
