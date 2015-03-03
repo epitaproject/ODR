@@ -6,6 +6,7 @@
 #include<SDL/SDL.h>
 #include<SDL/SDL_image.h>
 
+#include <limits.h>
 
 SDL_Surface* initsdl()
 {
@@ -66,7 +67,7 @@ void putpixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel) {
   }
 }
 // un code degeu qui permet d'afficher un carre à l'endroit ou un objet noir est détecté
-  void displaysdl(char*path, SDL_Surface *screen)
+  void displaysdl(char*path, SDL_Surface *screen,int min,int max)
 {
    SDL_Surface *picture;
     picture= IMG_Load(path);
@@ -91,7 +92,7 @@ void putpixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel) {
         {
             myColor = getpixel(picture,i,j);
             SDL_GetRGB(myColor,picture->format, &r ,&g,&b);
-            if(g+b < 100 && (j < picture->h -40))
+            if( min< g+b && g+b < max && (j < picture->h -40))
             {
                 color_dst = SDL_MapRGB(picture->format,180,230,100);
                 somme_x = somme_x + i;
@@ -163,11 +164,17 @@ SDL_Surface *screen;
 int i = 0;
 while(1)
 {
-    // télécharge l'image qui se trouve sur la camera IP(l'adresse ip de la caméra est 172.21.1.200)
+   FILE*config=fopen("config","r");
+   char* path=malloc(SHRT_MAX);
+   int min; 
+   int max;
+   fscanf(config,"%s %i %i",path,min,max);
+   
+  // télécharge l'image qui se trouve sur la camera IP(l'adresse ip de la caméra est 172.21.1.200)
     //une fois qu'on récupère l'image on peut la traiter
-    download("http://172.21.1.200/cgi-bin/jpg/image.cgi?resolution=704x576&dummy=1422852582922","toto.jpg");
+    download(path,"toto.jpg");
     //traite l'image télécharger et affiche une nouvelle image qui correspont a celle du videoprojecteur
-    displaysdl("toto.jpg",screen);
+    displaysdl("toto.jpg",screen,min,max);
     i++;
 
 }
