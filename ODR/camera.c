@@ -6,6 +6,11 @@
 #include<SDL/SDL.h>
 #include<SDL/SDL_image.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <limits.h>
 
 SDL_Surface* initsdl()
@@ -164,17 +169,21 @@ SDL_Surface *screen;
 int i = 0;
 while(1)
 {
-   FILE*config=fopen("config","r");
+   int config=open("config",O_RDONLY);
+   char* string=malloc(SHRT_MAX);
+   
+   read(config,(void*)string,SHRT_MAX);
+   
    char* path=malloc(SHRT_MAX);
    int min; 
    int max;
-   fscanf(config,"%s %i %i",path,min,max);
+   sscanf(string,"%s %i %i",&path,&min,&max);
    
   // télécharge l'image qui se trouve sur la camera IP(l'adresse ip de la caméra est 172.21.1.200)
     //une fois qu'on récupère l'image on peut la traiter
-    download(path,"toto.jpg");
+    //download(path,"toto.jpg");
     //traite l'image télécharger et affiche une nouvelle image qui correspont a celle du videoprojecteur
-    displaysdl("toto.jpg",screen,min,max);
+    //displaysdl("toto.jpg",screen,min,max);
     i++;
 
 }
