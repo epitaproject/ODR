@@ -8,6 +8,24 @@ struct callback_button_data{
   GtkWidget* max;
 };
 
+void exita(GtkWidget*widget,gpointer data)
+{
+  struct callback_button_data*dat=(struct callback_button_data*)data;
+  
+  GtkWidget*entry=dat->path;
+  char*path=gtk_entry_get_text((GtkEntry*)entry);
+  
+  GtkWidget*minw=dat->min;
+  int min=gtk_range_get_value((GtkRange*)minw);
+  
+  GtkWidget*maxw=dat->max;
+  int max=gtk_range_get_value((GtkRange*)maxw);
+  
+  FILE* config=fopen("./config","w");
+  fprintf(config,"%s %i %i 1",path,min,max);
+  fclose(config);
+}
+
 void callback_button(GtkWidget*widget,gpointer data)
 {
   struct callback_button_data*dat=(struct callback_button_data*)data;
@@ -21,8 +39,8 @@ void callback_button(GtkWidget*widget,gpointer data)
   GtkWidget*maxw=dat->max;
   int max=gtk_range_get_value((GtkRange*)maxw);
   
-  FILE* config=fopen("config","w");
-  fprintf(config,"%s %i %i",path,min,max);
+  FILE* config=fopen("./config","w");
+  fprintf(config,"%s %i %i 0",path,min,max);
   fclose(config);
 }
 
@@ -32,7 +50,7 @@ void main_window()
   window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
   g_signal_connect(G_OBJECT(window), "destroy",G_CALLBACK(gtk_main_quit), NULL);
   GtkWidget*table;
-  table=gtk_table_new(4,1,TRUE);
+  table=gtk_table_new(5,1,TRUE);
   gtk_container_add(GTK_CONTAINER(window),table);
   
   struct callback_button_data*data=malloc(sizeof(struct callback_button_data));
@@ -56,6 +74,11 @@ void main_window()
   max=gtk_hscale_new_with_range (0,500,1);
   gtk_table_attach_defaults((GtkTable*)table,max,0,1,2,3);
   data->max=max;
+  
+  GtkWidget*exit_button=gtk_button_new();
+  gtk_button_set_label((GtkButton*)exit_button,"quitter");
+  g_signal_connect(G_OBJECT(exit_button),"clicked",G_CALLBACK(exita),data);
+  gtk_table_attach_defaults((GtkTable*)table,exit_button,0,1,4,5);
   
   gtk_widget_show_all(window);
 }

@@ -166,19 +166,24 @@ int main()
 {
 SDL_Surface *screen;
   screen=initsdl();
-int i = 0;
+  int i = 0;
+  char* string=malloc(SHRT_MAX);
+  char* path=malloc(SHRT_MAX);
+  int exit=0;
+  int min;
+  int max;
 while(1)
 {
    int config=open("config",O_RDONLY);
-   char* string=malloc(SHRT_MAX);
+   
 
    read(config,(void*)string,SHRT_MAX);
 
-   char* path=malloc(SHRT_MAX);
-   int min;
-   int max;
-   sscanf(string,"%s %i %i",path,&min,&max);
+   
+   sscanf(string,"%s %i %i %i",path,&min,&max,&exit);
 
+   if(exit){return 0;}
+   
   // télécharge l'image qui se trouve sur la camera IP(l'adresse ip de la caméra est 172.21.1.200)
     //une fois qu'on récupère l'image on peut la traiter
     //download(path,"toto.jpg");
