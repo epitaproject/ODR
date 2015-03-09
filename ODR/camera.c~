@@ -26,6 +26,7 @@ Uint8* pixelref(SDL_Surface *surf, unsigned x, unsigned y) {
   return (Uint8*)surf->pixels + y * surf->pitch + x * bpp;
 }
 
+// permet de récupérer la couleur d'un pixel à la position x,y
 Uint32 getpixel(SDL_Surface *surface, unsigned x, unsigned y) {
   Uint8 *p = pixelref(surface, x, y);
   switch(surface->format->BytesPerPixel) {
@@ -43,7 +44,8 @@ Uint32 getpixel(SDL_Surface *surface, unsigned x, unsigned y) {
   }
   return 0;
 }
-
+// permet de modifier la couleur d'un pixel à la position x, y
+// surface représente l'image sur laquelle on veut faire la modification et pixel représente la couleur du pixel
 void putpixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel) {
   Uint8 *p = pixelref(surface, x, y);
   switch(surface->format->BytesPerPixel) {
@@ -133,7 +135,8 @@ printf("%i\n",min);
     }
       pos_x = somme_x/cpt_x;
     pos_y = somme_y/cpt_y;
-
+//printf("%i\n",pos_x);
+//printf("%i\n",pos_y);
  print_cercle(dst, 70,pos_x, pos_y);
     
     SDL_BlitSurface(dst, NULL,screen,&rectangle);
@@ -147,7 +150,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     return written;
 }
 
-
+//télécharge l'image
 void download(char *src,char* des) {
     CURL *curl;
     FILE *fp;
@@ -188,9 +191,10 @@ while(1)
 
    if(exit){return 0;}
    
-  
-    download("http://172.21.1.200/cgi-bin/jpg/image.cgi?resolution=704x576&dummy=1422852582922","toto.jpg");
-   
+  // télécharge l'image qui se trouve sur la camera IP(l'adresse ip de la caméra est 172.21.1.200)
+    //une fois qu'on récupère l'image on peut la traiter
+    //download(path,"toto.jpg");
+    //traite l'image télécharger et affiche une nouvelle image qui correspont a celle du videoprojecteur
     displaysdl("toto.jpg",screen,min,max);
     i++;
 
