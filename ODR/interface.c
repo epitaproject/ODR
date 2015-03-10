@@ -50,7 +50,7 @@ void main_window()
   window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
   g_signal_connect(G_OBJECT(window), "destroy",G_CALLBACK(gtk_main_quit), NULL);
   GtkWidget*table;
-  table=gtk_table_new(5,1,TRUE);
+  table=gtk_table_new(7,1,TRUE);
   gtk_container_add(GTK_CONTAINER(window),table);
   
   struct callback_button_data*data=malloc(sizeof(struct callback_button_data));
@@ -63,22 +63,29 @@ void main_window()
   GtkWidget*button=gtk_button_new();
   gtk_button_set_label((GtkButton*)button,"valider");
   g_signal_connect(G_OBJECT(button),"clicked",G_CALLBACK(callback_button),data);
-  gtk_table_attach_defaults((GtkTable*)table,button,0,1,3,4);
+  gtk_table_attach_defaults((GtkTable*)table,button,0,1,5,6);
+  
+  GtkWidget*l1=gtk_label_new("seuillage minimum");
+  gtk_table_attach_defaults((GtkTable*)table,l1,0,1,1,2);
   
   GtkWidget*min;
   min=gtk_hscale_new_with_range (0,500,1);
-  gtk_table_attach_defaults((GtkTable*)table,min,0,1,1,2);
+  gtk_table_attach_defaults((GtkTable*)table,min,0,1,2,3);
   data->min=min;
+  
+    GtkWidget*l2=gtk_label_new("seuillage maximum");
+  gtk_table_attach_defaults((GtkTable*)table,l2,0,1,3,4);
   
    GtkWidget*max;
   max=gtk_hscale_new_with_range (0,500,1);
-  gtk_table_attach_defaults((GtkTable*)table,max,0,1,2,3);
+  gtk_table_attach_defaults((GtkTable*)table,max,0,1,4,5);
   data->max=max;
   
   GtkWidget*exit_button=gtk_button_new();
   gtk_button_set_label((GtkButton*)exit_button,"quitter");
   g_signal_connect(G_OBJECT(exit_button),"clicked",G_CALLBACK(exita),data);
-  gtk_table_attach_defaults((GtkTable*)table,exit_button,0,1,4,5);
+  gtk_table_attach_defaults((GtkTable*)table,exit_button,0,1,6,7);
+ 
   
   gtk_widget_show_all(window);
 }
