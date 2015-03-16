@@ -1,3 +1,8 @@
+
+#ifndef LIBRARY_H
+#define LIBRARY_H
+#include <stdlib.h>
+
 typedef struct cell
 {
   struct cell*prev;
@@ -18,3 +23,7 @@ void ins(queue* q,void*data);
 void * rem(queue *q);
 
 queue *queue_init();
+
+void free_queue(queue *q);
+
+#endif
