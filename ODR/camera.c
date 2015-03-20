@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <limits.h>
+#include"library.h"
 
 SDL_Surface* initsdl()
 {
@@ -20,7 +21,7 @@ SDL_Surface* initsdl()
   return screen;
 }
 
-static inline
+
 Uint8* pixelref(SDL_Surface *surf, unsigned x, unsigned y) {
   int bpp = surf->format->BytesPerPixel;
   return (Uint8*)surf->pixels + y * surf->pitch + x * bpp;
@@ -89,6 +90,23 @@ void print_cercle(SDL_Surface *dst, int r,int x, int y)
         }
     }
 }
+
+void fill_me_away(SDL_Surface*surface,unsigned i,unsigned j,Uint32 mark)
+{
+  if((i+1<surface->w&&j+1<surface->h)&&(getpixel(surface,i,j)!=getpixel(surface,i,j+1)))
+  {
+    putpixel(surface,i,j,mark);
+  }
+  if((i+1<surface->w&&j+1<surface->h)&&(getpixel(surface,i,j)!=getpixel(surface,i+1,j+1)))
+  {
+    putpixel(surface,i,j,mark);
+  }
+  if((i+1<surface->w&&j+1<surface->h)&&(getpixel(surface,i,j)!=getpixel(surface,i+1,j)))
+  {
+    putpixel(surface,i,j,mark);
+  }
+}
+
   void displaysdl(char*path, SDL_Surface *screen,int min,int max)
 {
    SDL_Surface *picture;
@@ -108,7 +126,6 @@ void print_cercle(SDL_Surface *dst, int r,int x, int y)
     int cpt_y = 1;
     int pos_x = 0;
     int pos_y = 0;
-printf("%i\n",min);
 
     for(int i = 0; i < picture->w;i++)
     {
@@ -118,26 +135,38 @@ printf("%i\n",min);
             SDL_GetRGB(myColor,picture->format, &r ,&g,&b);
             if( min<= g+b && g+b < max && (j < picture->h -40))
             {
-                color_dst = SDL_MapRGB(picture->format,180,230,100);
+                color_dst = SDL_MapRGB(picture->format,200,200,200);
                 somme_x = somme_x + i;
                 cpt_x = cpt_x +1;
                 somme_y = somme_y + j;
                 cpt_y = cpt_y +1;
+		putpixel(dst,i,j,color_dst);
             }
             else
             {
             color_dst = SDL_MapRGB(picture->format,180,230,100);
-            }
+	    }
             putpixel(dst,i,j,color_dst);
         }
     }
-      pos_x = somme_x/cpt_x;
+
+    pos_x = somme_x/cpt_x;
     pos_y = somme_y/cpt_y;
 
- print_cercle(dst, 70,pos_x, pos_y);
+
+ 
+  for(int i = 0; i < picture->w;i++)
+    {
+        for(int j = 0; j < picture->h ;j++)
+	{ 
+	  fill_me_away(dst,i,j,0);
+        }
+    }
     
-    SDL_BlitSurface(dst, NULL,screen,&rectangle);
-    SDL_UpdateRect(screen, 0, 0, 0, 0);
+     print_cercle(dst, 70,pos_x, pos_y);
+    
+     SDL_BlitSurface(dst, NULL,screen,&rectangle);
+     SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
 
@@ -176,6 +205,7 @@ SDL_Surface *screen;
   int exit=0;
   int min;
   int max;
+  
 while(1)
 {
    int config=open("config",O_RDONLY);
@@ -189,10 +219,11 @@ while(1)
    if(exit){return 0;}
    
   
-    download("http://172.21.1.200/cgi-bin/jpg/image.cgi?resolution=704x576&dummy=1422852582922","toto.jpg");
+    //download("http://172.21.1.200/cgi-bin/jpg/image.cgi?resolution=704x576&dummy=1422852582922","toto.jpg");
    
     displaysdl("toto.jpg",screen,min,max);
-    i++;
+
+   
 
 }
 
