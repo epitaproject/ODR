@@ -12,7 +12,96 @@
 #include <unistd.h>
 
 #include <limits.h>
-#include"library.h"
+
+
+struct pos
+{
+    int x,y;
+};
+
+typedef struct Node {
+    struct pos item;
+    struct Node* next;
+} Node;
+
+typedef struct Queue {
+    Node* head;
+    Node* tail;
+
+    void (*push) (struct Queue*, struct pos); // add item to tail
+    // get item from head and remove it from queue
+    struct pos (*pop) (struct Queue*);
+    // get item from head but keep it in queue
+    int (*peek) (struct Queue*);
+    // display all element in queue
+    void (*display) (struct Queue*);
+    // size of this queue
+    int size;
+} Queue;
+
+void push (Queue* queue, struct pos item) {
+    // Create a new node
+    Node* n = (Node*) malloc (sizeof(Node));
+    n->item = item;
+    n->next = NULL;
+
+    if (queue->head == NULL) { // no head
+        queue->head = n;
+    } else{
+        queue->tail->next = n;
+    }
+    queue->tail = n;
+    queue->size++;
+}
+
+struct pos pop (Queue* queue) {
+    // get the first item
+    Node* head = queue->head;
+    struct pos item = head->item;
+    // move head pointer to next node, decrease size
+    queue->head = head->next;
+    queue->size--;
+    // free the memory of original head
+    free(head);
+    return item;
+}
+
+struct pos peek (Queue* queue) {
+    Node* head = queue->head;
+    return head->item;
+}
+
+void display (Queue* queue) {
+    printf("\nDisplay: ");
+    // no item
+    if (queue->size == 0)
+        printf("No item in queue.\n");
+    else { // has item(s)
+        Node* head = queue->head;
+        int i, size = queue->size;
+        printf("%d item(s):\n", queue->size);
+        for (i = 0; i < size; i++) {
+            if (i > 0)
+                printf(", ");
+            printf("%d", head->item.y);
+            head = head->next;
+        }
+    }
+    printf("\n\n");
+}
+
+Queue createQueue () {
+    Queue queue;
+    queue.size = 0;
+    queue.head = NULL;
+    queue.tail = NULL;
+    queue.push = &push;
+    queue.pop = &pop;
+    queue.peek = &peek;
+    queue.display = &display;
+    return queue;
+}
+
 
 SDL_Surface* initsdl()
 {
@@ -84,9 +173,9 @@ void print_cercle(SDL_Surface *dst, int r,int x, int y)
 		{
                 color_dst =  SDL_MapRGB(dst->format,255,0,0);
                 putpixel(dst,i+x,j+y,color_dst);
-		}	
+		}
                }
-          
+
         }
     }
 }
@@ -107,6 +196,82 @@ void fill_me_away(SDL_Surface*surface,unsigned i,unsigned j,Uint32 mark)
   }
 }
 
+void appel(SDL_Surface *src)
+{
+    int ncfc = 80;
+    int** marqTab = malloc((src->w)*sizeof(int*));
+    for(int i = 0; i < src->w;i++)
+    {
+        marqTab[i] = malloc((src->h)*sizeof(int));
+    }
+
+    for(int j = 0; j < src->h;j++)
+    {
+        for(int i = 0; i < src->w;i++)
+        {
+            marqTab[i][j] = 0;
+        }
+    }
+    Uint32 *myColor;
+    Uint8* r,g,b;
+     for(int j = 0; j < src->h;j++)
+    {
+        for(int i = 0; i < src->w;i++)
+        {
+            myColor = getpixel(src,i,j);
+            SDL_GetRGB(myColor,src->format,&r,&g,&b);
+
+
+            if(marqTab[i][j] ==0 && (g+b)<10 )
+            {
+                printf("%s\n","prout");
+                getcfc(src,i,j,marqTab,ncfc);
+                ncfc += 40;
+            }
+        }
+    }
+}
+
+void getcfc(SDL_Surface *src,int x_p, int y_p, int** marqTab, int ncfc)
+{
+    Uint32 color_dst = SDL_MapRGB(src->format,ncfc,ncfc,ncfc);
+	Uint32 *myColor;
+	Uint8 * r,g,b;
+	int x;
+	int y;
+	Queue q = createQueue();
+	struct pos tmp;
+	tmp.x = x_p;
+	tmp.y = y_p;
+	q.push(&q,tmp);
+	marqTab[x_p][y_p] = 1;
+	//tant que la file n'est pas vide
+	while(q.size > 0)
+	{
+		tmp = q.pop(&q);
+		x = tmp.x;
+		y = tmp.y;
+		putpixel(src,x,y,color_dst);
+		for(int i = -1;i <= 1;i++)
+		{
+			for(int j = -1;j <= 1;j++)
+			{
+				myColor = getpixel(src,x+i,y+j);
+				SDL_GetRGB(myColor,src->format,&r,&g,&b);
+				//si l'élément n'est pas marqué et s'il est noir on l'enfile
+				if(r+g+b < 10 && marqTab[x+i][y+j] == 0)
+				{
+					tmp.x = x+i;
+					tmp.y = y+j;
+					q.push(&q,tmp);
+					marqTab[x+i][y+j] = 1;
+				}
+			}
+		}
+	}
+
+}
+
   void displaysdl(char*path, SDL_Surface *screen,int min,int max)
 {
    SDL_Surface *picture;
@@ -117,7 +282,7 @@ void fill_me_away(SDL_Surface*surface,unsigned i,unsigned j,Uint32 mark)
     rectangle.x=0;
     rectangle.y=0;
 
-    Uint32* myColor; 
+    Uint32* myColor;
     Uint8* r,g,b;
  Uint32 color_dst;
     int somme_x=0;
@@ -135,17 +300,17 @@ void fill_me_away(SDL_Surface*surface,unsigned i,unsigned j,Uint32 mark)
             SDL_GetRGB(myColor,picture->format, &r ,&g,&b);
             if( min<= g+b && g+b < max && (j < picture->h -40))
             {
-                color_dst = SDL_MapRGB(picture->format,200,200,200);
+                color_dst = SDL_MapRGB(picture->format,0,0,0);
                 somme_x = somme_x + i;
                 cpt_x = cpt_x +1;
                 somme_y = somme_y + j;
                 cpt_y = cpt_y +1;
-		putpixel(dst,i,j,color_dst);
+                putpixel(dst,i,j,color_dst);
             }
             else
             {
-            color_dst = SDL_MapRGB(picture->format,180,230,100);
-	    }
+                color_dst = SDL_MapRGB(picture->format,180,230,100);
+	          }
             putpixel(dst,i,j,color_dst);
         }
     }
@@ -153,18 +318,10 @@ void fill_me_away(SDL_Surface*surface,unsigned i,unsigned j,Uint32 mark)
     pos_x = somme_x/cpt_x;
     pos_y = somme_y/cpt_y;
 
+    appel(dst);
 
- 
-  for(int i = 0; i < picture->w;i++)
-    {
-        for(int j = 0; j < picture->h ;j++)
-	{ 
-	  fill_me_away(dst,i,j,0);
-        }
-    }
-    
-     print_cercle(dst, 70,pos_x, pos_y);
-    
+     //print_cercle(dst, 70,pos_x, pos_y);
+
      SDL_BlitSurface(dst, NULL,screen,&rectangle);
      SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
@@ -205,25 +362,23 @@ SDL_Surface *screen;
   int exit=0;
   int min;
   int max;
-  
+
 while(1)
 {
    int config=open("config",O_RDONLY);
-   
+
 
    read(config,(void*)string,SHRT_MAX);
 
-   
+
    sscanf(string,"%s %i %i %i",path,&max,&min,&exit);
 
    if(exit){return 0;}
-   
-  
-    //download("http://172.21.1.200/cgi-bin/jpg/image.cgi?resolution=704x576&dummy=1422852582922","toto.jpg");
-   
+
+
     displaysdl("toto.jpg",screen,min,max);
 
-   
+
 
 }
 
