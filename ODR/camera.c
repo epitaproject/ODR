@@ -130,12 +130,12 @@ Uint32 getpixel(SDL_Surface *surface, unsigned x, unsigned y) {
       return p[0] | p[1] << 8 | p[2] << 16;
   case 4:
     return *(Uint32 *)p;
-  }
-  return 0;
+  } 
+    return 0;
 }
 
 void putpixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel) {
-  Uint8 *p = pixelref(surface, x, y);
+  Uint8 *p = pixelref(surface, x, y);     
   switch(surface->format->BytesPerPixel) {
   case 1:
     *p = pixel;
@@ -157,7 +157,7 @@ void putpixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel) {
   case 4:
     *(Uint32 *)p = pixel;
     break;
-  }
+  } 
 }
 
 void print_cercle(SDL_Surface *dst, int r,int x, int y)
@@ -311,7 +311,7 @@ point *p1=malloc(sizeof(point));
 point *p2=malloc(sizeof(point));
 p1->x=pos_x-70;
 p1->y=pos_y-70;
-p2->x=pos_x+70;
+p2->x=pos_x+100;
 p2->y=pos_y+70;
 line *l=malloc(sizeof(line));
 l->p1=p1;
@@ -320,7 +320,7 @@ l->p2=p2;
          for(int z=pos_x-70;z<pos_x+70;z++)
          {
          	putpixel(dst,z,trace(l,z),1);
-         		putpixel(dst,z,trace_orth(l,z),1);
+         	putpixel(dst,z,trace_orth(l,z),1);
          }
       
 //      
