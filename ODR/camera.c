@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 #include <limits.h>
-
+#include"shapes.h"
 
 struct pos
 {
@@ -178,27 +178,10 @@ void print_cercle(SDL_Surface *dst, int r,int x, int y)
 
         }
     }
-}
-
-void fill_me_away(SDL_Surface*surface,unsigned i,unsigned j,Uint32 mark)
-{
-  if((i+1<surface->w&&j+1<surface->h)&&(getpixel(surface,i,j)!=getpixel(surface,i,j+1)))
-  {
-    putpixel(surface,i,j,mark);
-  }
-  if((i+1<surface->w&&j+1<surface->h)&&(getpixel(surface,i,j)!=getpixel(surface,i+1,j+1)))
-  {
-    putpixel(surface,i,j,mark);
-  }
-  if((i+1<surface->w&&j+1<surface->h)&&(getpixel(surface,i,j)!=getpixel(surface,i+1,j)))
-  {
-    putpixel(surface,i,j,mark);
-  }
-}
-
+}                                   
 void appel(SDL_Surface *src)
 {
-    int ncfc = 80;
+    int ncfc = 0;
     int** marqTab = malloc((src->w)*sizeof(int*));
     for(int i = 0; i < src->w;i++)
     {
@@ -226,7 +209,7 @@ void appel(SDL_Surface *src)
             {
                 printf("%s\n","prout");
                 getcfc(src,i,j,marqTab,ncfc);
-                ncfc += 40;
+                ncfc += 1;
             }
         }
     }
@@ -320,8 +303,27 @@ void getcfc(SDL_Surface *src,int x_p, int y_p, int** marqTab, int ncfc)
 
     appel(dst);
 
-     //print_cercle(dst, 70,pos_x, pos_y);
+     print_cercle(dst, 70,pos_x, pos_y);
 
+
+//
+point *p1=malloc(sizeof(point));
+point *p2=malloc(sizeof(point));
+p1->x=pos_x-70;
+p1->y=pos_y-70;
+p2->x=pos_x+70;
+p2->y=pos_y+70;
+line *l=malloc(sizeof(line));
+l->p1=p1;
+l->p2=p2;
+
+         for(int z=pos_x-70;z<pos_x+70;z++)
+         {
+         	putpixel(dst,z,trace(l,z),1);
+         		putpixel(dst,z,trace_orth(l,z),1);
+         }
+      
+//      
      SDL_BlitSurface(dst, NULL,screen,&rectangle);
      SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
