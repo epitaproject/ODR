@@ -1,0 +1,3 @@
+Vu que vous n'avez pas la camera, pour faire fonctionner le code 
+il faut mettre en commentaire la fonction "download" qui et dans le main.
+Et mettre une image toto.jpg dans le meme dossier que celui de camera.c, makefile, etc
