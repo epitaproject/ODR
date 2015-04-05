@@ -511,21 +511,15 @@ int appel(SDL_Surface *src)
 
      for(int j = 10; j < src->h-10;j++)
     {
-        //printf("%s\n","bla");
         for(int i = 10; i < src->w-10;i++)
         {
             //printf("%s\n","bla");
             myColor = getpixel(src,i,j);
-
             SDL_GetRGB(myColor,src->format,&r,&g,&b);
-
-
             if(marqTab[i][j] ==0 && (b)<1 )
             {
-              //  printf("%s\n","prout");
                 getcfc(src,i,j,marqTab,ncfc);
                 ncfc+= 1;
-                //printf("fdsfsfdsfdsfdsfdsffs :  %i\n",ncfc);
             }
         }
     }
@@ -595,45 +589,111 @@ double calculAngle(double pixelX, double pixelY, double centreX,
 		 distanceC*distanceC)/(2*distanceA*distanceC));
 	return (180*angleRadian/3.14);
 }
+int** trim(int** tab,unsigned size_org,unsigned new_size)
+{
 
+    int** tmp = malloc(new_size*sizeof(int*));
+    for(int i = 0; i < new_size;i++)
+    {
+        tmp[i] = malloc(sizeof(int)*2);
+    }
+    unsigned j=0 ;
+    for(unsigned i=0;i<size_org;i++)
+    {
+        if(tab[i][0]!=-1)
+        {
+            tmp[j][0]=tab[i][0];
+            tmp[j][1] =tab[i][1];
+            j++;
+
+        }
+    }
+
+    return tmp;
+}
+void free_tab(int** tab,int w,int h)
+{
+    for(int i = 0; i < w;i++)
+    {
+        free(tab[i]);
+    }
+    free(tab);
+}
+
+SDL_Surface* get_flashcode(SDL_Surface* src,int x, int y)
+{
+    SDL_Surface* dst = SDL_CreateRGBSurface(0,50,50,32,0,0,0,0);
+  Uint32* color_src,color_dst;
+    Uint8* r,g,b;
+    if(x < src->w -30&& x >30 && y < src->h-30 && y > 30)
+    {
+      for(int i = x-25; i < x+25;i++)
+    {
+        for(int j = y-25; j < y+25 ;j++)
+        {
+
+            color_src = getpixel(src,i,j);
+            SDL_GetRGB(color_src,src->format, &r ,&g,&b);
+
+            color_dst = SDL_MapRGB(src->format,b,b,b);
+            putpixel(dst,i-x+25,j-y+25,color_dst);
+        }
+    }
+    }
+    return dst;
+}
 
 void displaysdl(char*path, SDL_Surface *screen,int min,int max)
 {
    SDL_Surface *picture;
     picture= IMG_Load(path);
 
-            //SDL_Surface *t = SDL_SetVideoMode(src->w,src->h, 32, SDL_HWSURFACE);
-            SDL_Surface *dst = seuillage(picture,0,90);//seuil l'image
-          int nb_flashcode = appel(dst); //récupère le nombre de bouteille et colorie chacune des bouteille differement
-        int** tab = appel_get_pos(dst,nb_flashcode);//récupère les position de chacune des bouteilles
-        printf("nb_flashcode: %i\n",nb_flashcode);
-        SDL_FillRect(dst, NULL, 0xffffff);
-          for(int i = 0;i < nb_flashcode;i++)
-          {
-                if(tab[i][0]!= -1)
-                {
-                   printf("%s\n","----------------------");
-              //  printf("c_x: %i\n",tab[i][0]);
-                //printf("c_y: %i\n",tab[i][1]);
-                print_cercle(dst,100,tab[i][0], tab[i][1]);
-                }
-          }
-          //printf("%s\n","bla");
+    //SDL_Surface *t = SDL_SetVideoMode(src->w,src->h, 32, SDL_HWSURFACE);
+    SDL_Surface *dst = seuillage(picture,0,90);//seuil l'image
+          int nb_composante = appel(dst); //récupère le nombre de bouteille et colorie chacune des bouteille differement
+        int** tabPos= appel_get_pos(dst,nb_composante);//récupère les position de chacune des bouteilles
 
-       //  print_line(dst,200,90,700,90);
-        // printf("%s\n","blo");
-          /*SDL_Surface **flashTab = malloc(nb_flashcode*sizeof(SDL_Surface*));
+        SDL_FillRect(dst, NULL, 0xffffff);
+        int nb_flashcode  =0;
+          for(int i = 0;i < nb_composante;i++)
+          {
+                if(tabPos[i][0]!= -1)
+                {
+                    nb_flashcode++;
+                }
+        }
+        int** flashPosTab = trim(tabPos,nb_composante,nb_flashcode);
+        SDL_Surface **flashTab = malloc(sizeof(SDL_Surface*)*nb_flashcode);
+
+        SDL_Rect rec;
+        rec.x = 0;
+        rec.y = 0;
           for(int i = 0; i < nb_flashcode;i++)
           {
-            flashTab[i] = SDL_CreateRGBSurface(0,43,43,32,0,0,0,0);
-          }*/
+            flashTab[i] = get_flashcode(picture,flashPosTab[i][0],flashPosTab[i][1]);
+            printf("c_x: %i\n",flashPosTab[i][0]);
+            printf("c_x: %i\n",flashPosTab[i][1]);
+            print_cercle(dst,100,flashPosTab[i][0], flashPosTab[i][1]);
+            SDL_BlitSurface(flashTab[i],NULL,screen,&rec);
+            rec.x += 55;
+             //   free(flashPosTab[i]);
+          }
 
-           // free(tab);
 
-                SDL_BlitSurface(dst,NULL,screen,NULL);
+
         SDL_UpdateRect(screen, 0, 0, 0, 0);
-    //  sleep(100);
 
+           for(int i = 0 ; i< nb_flashcode;i++)
+           {
+           SDL_FreeSurface(flashTab[i]);
+           }
+
+    free_tab(flashPosTab,nb_flashcode,2);
+     free_tab(tabPos,nb_composante,2);
+
+
+    //  sleep(100);
+    printf("%s\n","bla");
 
 SDL_FreeSurface(picture);
     SDL_FreeSurface(dst);
