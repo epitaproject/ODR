@@ -1,0 +1,14 @@
+<ODR_DATA>
+	<DRINK_LIST NUMBER_OF_ITEMS=2>
+		<DRINK>
+			<CODEID> 69640 </CODEID>
+			<DATA SIZE=6> Russie </DATA>
+			<NAME SIZE=5> Vodka </NAME>
+		</DRINK>
+		<DRINK>
+			<CODEID> 69640 </CODEID>
+			<DATA SIZE=9> Allemagne </DATA>
+			<NAME SIZE=6> Bière </NAME>
+		</DRINK>
+	</DRINK_LIST>
+</ODR_DATA>
