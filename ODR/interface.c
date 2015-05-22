@@ -9,7 +9,7 @@ static GtkBuilder* interface;
 static GtkToggleButton** code;
 static GQueue* Q;
 static GQueue*Q2;
-static int CBBindex=-1;
+static gboolean invoked=FALSE;
 
 //page1
 void button1_callback()
@@ -37,7 +37,7 @@ static int k=0;
 void comboboxtext1_callback()
 {
 	GtkComboBox*comboboxtext1=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext1");
-	CBBindex= gtk_combo_box_get_active(comboboxtext1);
+	int CBBindex= gtk_combo_box_get_active(comboboxtext1);
 	if(CBBindex!=-1&&*gtk_combo_box_get_active_text(comboboxtext1)=='A')
 		{
 			//add drink
@@ -70,6 +70,7 @@ void comboboxtext1_callback()
 void button2_callback()
 {
 	GtkComboBox*comboboxtext1=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext1");
+	int CBBindex= gtk_combo_box_get_active(comboboxtext1);
 	if(CBBindex!=-1)
 		{
 			//delete drink
@@ -90,6 +91,8 @@ void code_callback()
 	gtk_toggle_button_set_active(code[3],TRUE);
 	gtk_toggle_button_set_active(code[12],TRUE);
 	gtk_toggle_button_set_active(code[15],FALSE);
+	GtkComboBox*comboboxtext1=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext1");
+	int CBBindex= gtk_combo_box_get_active(comboboxtext1);
 	if(CBBindex!=-1)
 		{
 			unsigned int no=1;
@@ -118,6 +121,8 @@ void textbuffer1_callback()
 	free(end);
 	if(!g_queue_is_empty(Q))
 		{
+			GtkComboBox*comboboxtext1=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext1");
+			int CBBindex= gtk_combo_box_get_active(comboboxtext1);
 			struct codedata*dataqueue=(struct codedata*)g_queue_peek_nth(Q,CBBindex);
 			dataqueue->data=bufftext;
 		}
@@ -125,6 +130,8 @@ void textbuffer1_callback()
 
 void button3_callback()
 {
+	GtkComboBox*comboboxtext1=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext1");
+	int CBBindex= gtk_combo_box_get_active(comboboxtext1);
 	if(CBBindex!=-1)
 		{
 			struct codedata*queuepop=g_queue_peek_nth(Q,CBBindex);
@@ -141,45 +148,103 @@ void button6_callback()
 	gtk_button_set_label ((GtkButton*)button8,"gtk-save");
 
 	int respond=gtk_dialog_run(GTK_DIALOG(filechooserdialog1));
-	if(respond==1)
+	if(respond!=1)
 		{
-			GFile*gfile=gtk_file_chooser_get_file(GTK_FILE_CHOOSER(filechooserdialog1));
-			char*path=g_file_get_path(gfile);
-			FILE*file=fopen(path,"w");
-			//xml-marshall
-			unsigned int k=g_queue_get_length(Q);
-			char*datastart=g_strdup_printf("<ODR_DATA>\n\t<DRINK_LIST NUMBER_OF_ITEMS=%i>\n",k);
-			char*dataend="\t</DRINK_LIST>\n</ODR_DATA>";
-			char**list=malloc(k+1*sizeof(char*));
-			list[k]=NULL;
-			for(unsigned int i=0;i<k;i++)
-				{
-					struct codedata*queuepop=g_queue_peek_nth(Q,i);
-					char*drink="\t\t<DRINK>\n";
-					char*edrink="\t\t</DRINK>\n";
-					char*codeid=g_strdup_printf("\t\t\t<CODEID> %u </CODEID>\n",queuepop->codeid);
-					unsigned int l=strlen(queuepop->data);
-					char*data=g_strdup_printf("\t\t\t<DATA SIZE=%u> %s </DATA>\n",l,queuepop->data);
-					unsigned int j=strlen(queuepop->name);
-					char*name=g_strdup_printf("\t\t\t<NAME SIZE=%u> %s </NAME>\n",j,queuepop->name);
-					list[i]=g_strconcat(drink,codeid,data,name,edrink,NULL);
-
-					free(codeid);
-					free(data);
-					free(name);
-				}
-				char*ls=g_strjoinv(NULL,list);
-			fprintf(file,"%s%s%s",datastart,ls,dataend);
-			free(ls);
-			for(unsigned int i=0;i<k;i++)
-				{
-					free(list[i]);
-				}
-			free(datastart);
-			fclose(file);
-			free(path);
+			gtk_widget_hide(filechooserdialog1);
+			return;
 		}
+
+	GFile*gfile=gtk_file_chooser_get_file(GTK_FILE_CHOOSER(filechooserdialog1));
+	char*path=g_file_get_path(gfile);
+	FILE*file=fopen(path,"w");
+	//xml-marshall
+	unsigned int k=g_queue_get_length(Q);
+	char*datastart=g_strdup_printf("<ODR_DATA>\n\t<DRINK_LIST NUMBER_OF_ITEMS=%i>\n",k);
+	char*dataend="\t</DRINK_LIST>\n</ODR_DATA>";
+	char**list=malloc(k+1*sizeof(char*));
+	list[k]=NULL;
+	for(unsigned int i=0;i<k;i++)
+		{
+			struct codedata*queuepop=g_queue_peek_nth(Q,i);
+			char*drink="\t\t<DRINK>\n";
+			char*edrink="\t\t</DRINK>\n";
+			char*codeid=g_strdup_printf("\t\t\t<CODEID> %u </CODEID>\n",queuepop->codeid);
+			unsigned int l=strlen(queuepop->data);
+			char*data=g_strdup_printf("\t\t\t<DATA SIZE=%u> %s </DATA>\n",l,queuepop->data);
+			unsigned int j=strlen(queuepop->name);
+			char*name=g_strdup_printf("\t\t\t<NAME SIZE=%u> %s </NAME>\n",j,queuepop->name);
+			list[i]=g_strconcat(drink,codeid,data,name,edrink,NULL);
+
+			free(codeid);
+			free(data);
+			free(name);
+		}
+		char*ls=g_strjoinv(NULL,list);
+	fprintf(file,"%s%s%s",datastart,ls,dataend);
+	free(ls);
+	for(unsigned int i=0;i<k;i++)
+		{
+			free(list[i]);
+		}
+	free(datastart);
+	fclose(file);
+	free(path);
 	gtk_widget_hide(filechooserdialog1);
+}
+
+struct cocktaildata
+{
+	char*name;
+	char*description;
+	GQueue*list;
+};
+
+void codetab_callback(GtkWidget*widget,gpointer data)
+{
+	if(invoked){return;}
+	unsigned int i=gtk_toggle_button_get_active((GtkToggleButton*)widget);
+	char*btnlbl=(char*)gtk_button_get_label((GtkButton*)widget);
+	GtkComboBox*comboboxtext2=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext2");
+	int k=gtk_combo_box_get_active(comboboxtext2);
+	GQueue*Q3=((struct cocktaildata*)g_queue_peek_nth(Q2,k))->list;
+	if(i)
+		{
+			//add drink to current cocktail
+			struct codedata*data=g_queue_peek_head(Q);
+			if(!data)
+				{
+					return;
+				}
+			for(unsigned int i=0;i<g_queue_get_length(Q);i++)
+				{
+					data=(struct codedata*)g_queue_peek_nth(Q,i);
+					char*name=data->name;
+					if(!strcmp(btnlbl,name))
+						{
+							g_queue_push_head(Q3,data);
+							return;
+						}
+				}
+		}
+	else
+		{
+			//remove drink from current cocktail
+			for(unsigned int i=0;i<g_queue_get_length(Q3);i++)
+				{
+					struct codedata*codedata=(struct codedata*)g_queue_peek_nth(Q3,i);
+					char*name=codedata->name;
+					if(!strcmp(btnlbl,name))
+						{
+							g_queue_pop_nth(Q3,i);
+							return;
+						}
+				}
+		}
+}
+
+void GFdump(gpointer data,gpointer userdata)
+{
+	gtk_widget_destroy((GtkWidget*)data);
 }
 
 void button7_callback()
@@ -190,105 +255,127 @@ void button7_callback()
 	gtk_button_set_label ((GtkButton*)button8,"gtk-open");
 
 	int respond=gtk_dialog_run(GTK_DIALOG(filechooserdialog1));
-	if(respond==1)
+	if(respond!=1)
 		{
-			GFile*gfile=gtk_file_chooser_get_file(GTK_FILE_CHOOSER(filechooserdialog1));
-			char*path=g_file_get_path(gfile);
-			FILE*file=fopen(path,"r");
-			fseek(file,0,SEEK_END);
-			unsigned long int l=ftell(file);
-			rewind(file);
-			free(path);
-			char*data=malloc(l);
-			fread((void*)data,l,1,file);
-			fclose(file);
-			//xml-unmarshall
-			while(k)
-				{
-					CBBindex=0;
-					button2_callback();
-				}
-			char** regexS=g_regex_split_simple("<DRINK_LIST NUMBER_OF_ITEMS=([0-9]+)>(?:\n|\t)+(<DRINK>(?:.|\n)+</DRINK>)",data,0,0);
-			sscanf(regexS[1],"%u",&l);
-			char*trim1=malloc(strlen(regexS[2]));
-			GtkComboBox*comboboxtext1=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext1");
-
-			for(unsigned int i=0;i<l;i++)
-			{
-				gtk_combo_box_set_active (comboboxtext1,i);
-			}
-
-			strcpy(trim1,regexS[2]);
-			g_strfreev(regexS);
-
-			char*patern="(<DRINK>(?:\t|\n)*<CODEID> [0-9]+ </CODEID>(?:\t|\n)*<DATA SIZE=[0-9]+>(?:.|\n)*</DATA>(?:\n|\t)*<NAME SIZE=[0-9]+> (?:.|\n)*</DRINK>(?:\n|\t)*)";
-			char*regexB=malloc(l*strlen(patern));
-			char*t;
-			t=regexB;
-			for(unsigned int i=0;i<l;i++)
-				{
-					strcpy(t,patern);
-					t+=strlen(patern);
-				}
-			regexS=g_regex_split_simple(regexB,trim1,0,0);
-			free(regexB);
-			char**trim2=malloc((l+1)*sizeof(char*));
-			trim2[l]=NULL;
-			for(unsigned int i=0;i<l;i++)
-			{
-				trim2[i]=malloc(strlen(regexS[i+1]));
-				strcpy(trim2[i],regexS[i+1]);
-			}
-			g_strfreev(regexS);
-
-			GRegex*regexL=g_regex_new("<DRINK>(?:\n|\t)+<CODEID> ([0-9]+) </CODEID>(?:\n|\t)+<DATA SIZE=([0-9]+)> ((?:\n|.)*) </DATA>(?:\n|\t)+<NAME SIZE=([0-9]+)> (.*) </NAME>(?:\n|\t)+</DRINK>",0,0,NULL);
-			unsigned int j;
-			for(unsigned int i=0;i<l;i++)
-				{
-					regexS=g_regex_split(regexL,trim2[i],0);
-					struct codedata*data=g_queue_peek_nth(Q,i);
-					sscanf(regexS[1],"%u",&j);
-					data->codeid=j;
-					sscanf(regexS[2],"%u",&j);
-					data->data=malloc(j);
-					strcpy(data->data,regexS[3]);
-					sscanf(regexS[4],"%u",&j);
-					data->name=malloc(j);
-					strcpy(data->name,regexS[5]);
-					g_strfreev(regexS);
-				}
-			g_strfreev(trim2);
-			g_regex_unref(regexL);
+			gtk_widget_hide(filechooserdialog1);
+			return;
 		}
+	GFile*gfile=gtk_file_chooser_get_file(GTK_FILE_CHOOSER(filechooserdialog1));
+	char*path=g_file_get_path(gfile);
+	FILE*file=fopen(path,"r");
+	fseek(file,0,SEEK_END);
+	unsigned long int l=ftell(file);
+	rewind(file);
+	free(path);
+	char*data=malloc(l);
+	fread((void*)data,l,1,file);
+	fclose(file);
+	//xml-unmarshall
+	GtkComboBox*comboboxtext1=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext1");
+	while(k)
+		{
+			gtk_combo_box_set_active(comboboxtext1,0);
+			button2_callback();
+		}
+	char** regexS=g_regex_split_simple("<DRINK_LIST NUMBER_OF_ITEMS=([0-9]+)>(?:\n|\t)+(<DRINK>(?:.|\n)+</DRINK>)",data,0,0);
+	sscanf(regexS[1],"%u",&l);
+	char*trim1=malloc(strlen(regexS[2]));
+
+	for(unsigned int i=0;i<l;i++)
+		{
+			gtk_combo_box_set_active (comboboxtext1,i);
+		}
+
+	strcpy(trim1,regexS[2]);
+	g_strfreev(regexS);
+
+	char*patern="(<DRINK>(?:\t|\n)*<CODEID> [0-9]+ </CODEID>(?:\t|\n)*<DATA SIZE=[0-9]+>(?:.|\n)*</DATA>(?:\n|\t)*<NAME SIZE=[0-9]+> (?:.|\n)*</DRINK>(?:\n|\t)*)";
+	char*regexB=malloc(l*strlen(patern));
+	char*t;
+	t=regexB;
+	for(unsigned int i=0;i<l;i++)
+		{
+			strcpy(t,patern);
+			t+=strlen(patern);
+		}
+	regexS=g_regex_split_simple(regexB,trim1,0,0);
+	free(regexB);
+	char**trim2=malloc((l+1)*sizeof(char*));
+	trim2[l]=NULL;
+	for(unsigned int i=0;i<l;i++)
+		{
+			trim2[i]=malloc(strlen(regexS[i+1]));
+			strcpy(trim2[i],regexS[i+1]);
+		}
+	g_strfreev(regexS);
+
+	GRegex*regexL=g_regex_new("<DRINK>(?:\n|\t)+<CODEID> ([0-9]+) </CODEID>(?:\n|\t)+<DATA SIZE=([0-9]+)> ((?:\n|.)*) </DATA>(?:\n|\t)+<NAME SIZE=([0-9]+)> (.*) </NAME>(?:\n|\t)+</DRINK>",0,0,NULL);
+	unsigned int j;
+	for(unsigned int i=0;i<l;i++)
+		{
+			regexS=g_regex_split(regexL,trim2[i],0);
+			struct codedata*data=g_queue_peek_nth(Q,i);
+			sscanf(regexS[1],"%u",&j);
+			data->codeid=j;
+			sscanf(regexS[2],"%u",&j);
+			data->data=malloc(j);
+			strcpy(data->data,regexS[3]);
+			sscanf(regexS[4],"%u",&j);
+			data->name=malloc(j);
+			strcpy(data->name,regexS[5]);
+			g_strfreev(regexS);
+		}
+	g_strfreev(trim2);
+	g_regex_unref(regexL);
 	gtk_widget_hide(filechooserdialog1);
+	comboboxtext1_callback();
+
+
+//xml-unmarshall cocktail
+
+
+	GtkContainer*vbox1=(GtkContainer*)gtk_builder_get_object(interface,"vbox1");
+	GList*children=gtk_container_get_children(vbox1);
+	g_list_foreach(children,GFdump,NULL);
+	GtkWidget**codetab=malloc(l*sizeof(GtkWidget*));
+	for(unsigned int i=0;i<l;i++)
+		{
+			struct codedata*codedata=(struct codedata*)g_queue_peek_nth(Q,i);
+			char*name=codedata->name;
+			codetab[i]=gtk_check_button_new_with_label(name);
+			g_signal_connect(G_OBJECT(codetab[i]),"toggled",G_CALLBACK(codetab_callback),NULL);
+			gtk_box_pack_start_defaults ((GtkBox*)vbox1,codetab[i]);
+		}
+	free(codetab);
+	gtk_widget_show_all((GtkWidget*)vbox1);
 }
 
 //page3
-struct cocktaildata
-{
-	char*name;
-	char*description;
-	GQueue*list;
-};
 
 unsigned int l=0;
 void comboboxtext2_callback()
 {
 	GtkComboBox*comboboxtext2=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext2");
-	CBBindex= gtk_combo_box_get_active(comboboxtext2);
+	int CBBindex= gtk_combo_box_get_active(comboboxtext2);
 	if(CBBindex!=-1&&*gtk_combo_box_get_active_text(comboboxtext2)=='A')
 		{
 			//add cocktail
-			char* text=malloc(10);
-			g_strdup_printf(text,"cocktail_%i",l);
+			char* text=g_strdup_printf("cocktail_%i",l);
 			++l;
 			gtk_combo_box_insert_text(comboboxtext2,CBBindex,text);
 			struct cocktaildata*queuedata=malloc(sizeof(struct cocktaildata));
-			queuedata->name=text;
-			queuedata->description="";
+			queuedata->name=g_strdup(text);
+			queuedata->description=g_strdup("");
 			queuedata->list=g_queue_new();
 			g_queue_push_nth (Q2,queuedata,CBBindex);
 			gtk_combo_box_set_active(comboboxtext2,CBBindex);
+			GtkContainer*vbox1=(GtkContainer*)gtk_builder_get_object(interface,"vbox1");
+			GList*children=gtk_container_get_children(vbox1);
+			while(children)
+				{
+					gtk_toggle_button_set_active((GtkToggleButton*)(children->data),FALSE);
+					children=children->next;
+				}
 		}
 	else if(CBBindex!=-1)
 		{
@@ -297,12 +384,41 @@ void comboboxtext2_callback()
 			gtk_text_buffer_set_text (textbuffer2,queuepop->description,strlen(queuepop->description));
 			GtkEntry*entry3=(GtkEntry*)gtk_builder_get_object(interface,"entry3");
 			gtk_entry_set_text(entry3,queuepop->name);
+			GtkContainer*vbox1=(GtkContainer*)gtk_builder_get_object(interface,"vbox1");
+			GList*children=gtk_container_get_children(vbox1);
+			GQueue*Q3=(GQueue*)(((struct cocktaildata*)g_queue_peek_nth(Q2,CBBindex))->list);
+			while(children)
+				{
+					GtkToggleButton*child=(GtkToggleButton*)(children->data);
+					char*btnlbl=(char*)gtk_button_get_label((GtkButton*)child);
+					unsigned int i=0;
+					for(;i<g_queue_get_length(Q3);i++)
+						{
+							struct codedata*data=(struct codedata*)g_queue_peek_nth(Q3,i);
+							char*name=data->name;
+							if(!strcmp(name,btnlbl))
+								{
+									invoked=TRUE;
+									gtk_toggle_button_set_active(child,TRUE);
+									invoked=FALSE;
+									break;
+								}
+						}
+					if(i==g_queue_get_length(Q3))
+						{
+							invoked=TRUE;
+							gtk_toggle_button_set_active(child,FALSE);
+							invoked=FALSE;
+						}
+					children=children->next;
+				}
 		}
 }
 
 void button4_callback()
 {
 	GtkComboBox*comboboxtext2=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext2");
+	int CBBindex= gtk_combo_box_get_active(comboboxtext2);
 	if(CBBindex!=-1)
 		{
 			//delete cocktail
@@ -319,6 +435,8 @@ void button4_callback()
 
 void button5_callback()
 {
+	GtkComboBox*comboboxtext2=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext2");
+	int CBBindex= gtk_combo_box_get_active(comboboxtext2);
 	if(CBBindex!=-1)
 		{
 			struct cocktaildata*queuepop=g_queue_peek_nth(Q2,CBBindex);
@@ -338,6 +456,8 @@ void textbuffer2_callback()
 	free(end);
 	if(!g_queue_is_empty(Q2))
 		{
+			GtkComboBox*comboboxtext2=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext2");
+			int CBBindex= gtk_combo_box_get_active(comboboxtext2);
 			struct cocktaildata*dataqueue=(struct cocktaildata*)g_queue_peek_nth(Q2,CBBindex);
 			dataqueue->description=bufftext;
 		}
@@ -397,7 +517,10 @@ void main_window()
 	g_signal_connect(G_OBJECT(button6),"clicked",G_CALLBACK(button6_callback),NULL);
 	GtkWidget*button7=(GtkWidget*)gtk_builder_get_object(interface,"button7");
 	g_signal_connect(G_OBJECT(button7),"clicked",G_CALLBACK(button7_callback),NULL);
-
+	GtkWidget*button10=(GtkWidget*)gtk_builder_get_object(interface,"button10");
+	g_signal_connect(G_OBJECT(button10),"clicked",G_CALLBACK(button6_callback),NULL);
+	GtkWidget*button11=(GtkWidget*)gtk_builder_get_object(interface,"button11");
+	g_signal_connect(G_OBJECT(button11),"clicked",G_CALLBACK(button7_callback),NULL);
 
 	Q= g_queue_new();
 	Q2=g_queue_new();
