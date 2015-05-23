@@ -168,7 +168,8 @@ void button6_callback()
 	//xml-marshall
 	unsigned int k=g_queue_get_length(Q);
 	char*datastart=g_strdup_printf("<ODR_DATA>\n\t<DRINK_LIST NUMBER_OF_ITEMS=%i>\n",k);
-	char*dataend="\t</DRINK_LIST>\n</ODR_DATA>";
+	char*dataend="\t</DRINK_LIST>\n";
+	char*dataend2="</ODR_DATA>";
 	char**list=malloc(k+1*sizeof(char*));
 	list[k]=NULL;
 	for(unsigned int i=0;i<k;i++)
@@ -190,7 +191,7 @@ void button6_callback()
 		char*ls=g_strjoinv(NULL,list);
 		
 		//cocktail marshall
-		char*datacocktailstart="\t\t<COCKTAILS>\n";
+		char*datacocktailstart=g_strdup_printf("\t\t<COCKTAILS NOI=%u>\n",g_queue_get_length(Q2));
 		char*datacocktailend="\t\t</COCKTAILS>\n";
 		char**Clist=malloc((g_queue_get_length(Q2)+1)*sizeof(char*));
 		Clist[g_queue_get_length(Q2)]=NULL;
@@ -205,9 +206,9 @@ void button6_callback()
 		    char*description=cocktaildata->description;
 		    char*XMLdescription=g_strdup_printf("\t\t\t\t<DESCRIPTION SIZE=%u> %s </DESCRIPTION>\n",strlen(description),description);
 		    //bind the list of drink for current cocktail
-		    char*drinkliststart="\t\t\t\t<DRINKLIST>\n";
-		    char*drinklistend="\t\t\t\t</DRINKLIST>\n";
 		    GQueue*Q3=cocktaildata->list;
+		    char*drinkliststart=g_strdup_printf("\t\t\t\t<DRINKLIST NOI=%u>\n",g_queue_get_length(Q3));
+		    char*drinklistend="\t\t\t\t</DRINKLIST>\n";
 		    char**drinklist=malloc((g_queue_get_length(Q3)+1)*sizeof(char*));
 		    drinklist[g_queue_get_length(Q3)]=NULL;
 		    for(unsigned int i=0;i<g_queue_get_length(Q3);i++)
@@ -232,6 +233,7 @@ void button6_callback()
 		    g_strfreev(drinklist);
 		    char*drinklistcatXML=g_strconcat(drinkliststart,drinklistcat,drinklistend,NULL);
 		    Clist[i]=g_strconcat(cocktailstart,XMLname,XMLdescription,drinklistcatXML,cocktailend,NULL);
+		    free(drinkliststart);
 		    free(XMLname);
 		    free(XMLdescription);
 		    free(drinklistcat);
@@ -241,8 +243,10 @@ void button6_callback()
 		g_strfreev(Clist);
 		char*cocktailXMLfull=g_strconcat(datacocktailstart,cocktaildatastringfull,datacocktailend,NULL);
 		free(cocktaildatastringfull);		 
-		//end of cocktail marshall
-		fprintf(file,"%s%s%s%s",datastart,ls,cocktailXMLfull,dataend);
+		free(datacocktailstart);
+
+//end of cocktail marshall
+		fprintf(file,"%s%s%s%s%s",datastart,ls,dataend,cocktailXMLfull,dataend2);
 		free(cocktailXMLfull);
 		free(ls);
 		for(unsigned int i=0;i<k;i++)
@@ -388,6 +392,18 @@ void button7_callback()
 
 
 //xml-unmarshall cocktail
+	GtkComboBox*combobox//continue
+	while(g_queue_get_length(Q2))
+	  {
+	    
+	  }
+
+	char**pass1=g_regex_split_simple("<COCKTAILS NOI=([0-9]+)>(?:.|\n)*(<COCKTAIL>(?:.|\n)+</COCKTAIL>)(?:.|\n)*</COCKTAILS>",data,0,0);
+	unsigned int l;
+	sscanf(pass1[1],"%u",&l);
+	char*trim1=g_strdup(pass[1]);
+	g_freev(pass1);
+	char**pass2=g_regex_split_simple(,trim1,0,0);
 
 
 	GtkContainer*vbox1=(GtkContainer*)gtk_builder_get_object(interface,"vbox1");
@@ -411,6 +427,7 @@ void button7_callback()
 unsigned int l=0;
 void comboboxtext2_callback()
 {
+  //FIXME: beware of empty cocktails, please add protection
 	GtkComboBox*comboboxtext2=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext2");
 	int CBBindex= gtk_combo_box_get_active(comboboxtext2);
 	if(CBBindex!=-1&&*gtk_combo_box_get_active_text(comboboxtext2)=='A')
@@ -490,7 +507,7 @@ void button4_callback()
 			    free(dataqueue->description);
 			    g_queue_free_full(dataqueue->list,freecodedata);
 			    g_queue_free(dataqueue->list);
-			    free(dataqueue);//doesn't free ?
+			    free(dataqueue);//FIXME : doesn't free ?
 			  }
 
 			if(g_queue_is_empty(Q2))

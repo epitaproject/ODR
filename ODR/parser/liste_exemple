@@ -1,0 +1,54 @@
+<ODR_DATA>
+	<DRINK_LIST NUMBER_OF_ITEMS=2>
+		<DRINK>
+			<CODEID> 69640 </CODEID>
+			<DATA SIZE=9> allemagne </DATA>
+			<NAME SIZE=6> bière </NAME>
+		</DRINK>
+		<DRINK>
+			<CODEID> 69640 </CODEID>
+			<DATA SIZE=13> m_ère russie </DATA>
+			<NAME SIZE=5> vodka </NAME>
+		</DRINK>
+	</DRINK_LIST>
+		<COCKTAILS NOI=3>
+			<COCKTAIL>
+				<NAME SIZE=12> bière seuel </NAME>
+				<DESCRIPTION SIZE=12> bière seule </DESCRIPTION>
+				<DRINKLIST NOI=1>
+					<DRINK>
+						<CODEID> 69640 </CODEID>
+						<DATA SIZE=9> allemagne </DATA>
+						<NAME SIZE=6> bière </NAME>
+					</DRINK>
+				</DRINKLIST>
+			</COCKTAIL>
+			<COCKTAIL>
+				<NAME SIZE=10> cocktail_1 </NAME>
+				<DESCRIPTION SIZE=0>  </DESCRIPTION>
+				<DRINKLIST NOI=1>
+					<DRINK>
+						<CODEID> 69640 </CODEID>
+						<DATA SIZE=13> m_ère russie </DATA>
+						<NAME SIZE=5> vodka </NAME>
+					</DRINK>
+				</DRINKLIST>
+			</COCKTAIL>
+			<COCKTAIL>
+				<NAME SIZE=3> mix </NAME>
+				<DESCRIPTION SIZE=0>  </DESCRIPTION>
+				<DRINKLIST NOI=2>
+					<DRINK>
+						<CODEID> 69640 </CODEID>
+						<DATA SIZE=13> m_ère russie </DATA>
+						<NAME SIZE=5> vodka </NAME>
+					</DRINK>
+					<DRINK>
+						<CODEID> 69640 </CODEID>
+						<DATA SIZE=9> allemagne </DATA>
+						<NAME SIZE=6> bière </NAME>
+					</DRINK>
+				</DRINKLIST>
+			</COCKTAIL>
+		</COCKTAILS>
+</ODR_DATA>
