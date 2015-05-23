@@ -140,6 +140,14 @@ void button3_callback()
 		}
 }
 
+
+struct cocktaildata
+{
+	char*name;
+	char*description;
+	GQueue*list;
+};
+
 void button6_callback()
 {
 	GtkWidget*filechooserdialog1=(GtkWidget*)gtk_builder_get_object(interface,"filechooserdialog1");
@@ -180,24 +188,72 @@ void button6_callback()
 			free(name);
 		}
 		char*ls=g_strjoinv(NULL,list);
-	fprintf(file,"%s%s%s",datastart,ls,dataend);
-	free(ls);
-	for(unsigned int i=0;i<k;i++)
-		{
-			free(list[i]);
-		}
-	free(datastart);
-	fclose(file);
-	free(path);
-	gtk_widget_hide(filechooserdialog1);
-}
+		
+		//cocktail marshall
+		char*datacocktailstart="\t\t<COCKTAILS>\n";
+		char*datacocktailend="\t\t</COCKTAILS>\n";
+		char**Clist=malloc((g_queue_get_length(Q2)+1)*sizeof(char*));
+		Clist[g_queue_get_length(Q2)]=NULL;
+		for(unsigned int i=0;i<g_queue_get_length(Q2);i++)
+		  {
+		    //bind a single cocktail
+		    char*cocktailstart="\t\t\t<COCKTAIL>\n";
+		    char*cocktailend="\t\t\t</COCKTAIL>\n";
+		    struct cocktaildata*cocktaildata=(struct cocktaildata*)g_queue_peek_nth(Q2,i);
+		    char*name=cocktaildata->name;
+		    char*XMLname=g_strdup_printf("\t\t\t\t<NAME SIZE=%u> %s </NAME>\n",strlen(name),name);
+		    char*description=cocktaildata->description;
+		    char*XMLdescription=g_strdup_printf("\t\t\t\t<DESCRIPTION SIZE=%u> %s </DESCRIPTION>\n",strlen(description),description);
+		    //bind the list of drink for current cocktail
+		    char*drinkliststart="\t\t\t\t<DRINKLIST>\n";
+		    char*drinklistend="\t\t\t\t</DRINKLIST>\n";
+		    GQueue*Q3=cocktaildata->list;
+		    char**drinklist=malloc((g_queue_get_length(Q3)+1)*sizeof(char*));
+		    drinklist[g_queue_get_length(Q3)]=NULL;
+		    for(unsigned int i=0;i<g_queue_get_length(Q3);i++)
+		      {
+			//bind a single drink
+			struct codedata*queuepop=g_queue_peek_nth(Q3,i);
+			char*drink="\t\t\t\t\t<DRINK>\n";
+			char*edrink="\t\t\t\t\t</DRINK>\n";
+			char*codeid=g_strdup_printf("\t\t\t\t\t\t<CODEID> %u </CODEID>\n",queuepop->codeid);
+			unsigned int l=strlen(queuepop->data);
+			char*data=g_strdup_printf("\t\t\t\t\t\t<DATA SIZE=%u> %s </DATA>\n",l,queuepop->data);
+			unsigned int j=strlen(queuepop->name);
+			char*name=g_strdup_printf("\t\t\t\t\t\t<NAME SIZE=%u> %s </NAME>\n",j,queuepop->name);
+			drinklist[i]=g_strconcat(drink,codeid,data,name,edrink,NULL);
 
-struct cocktaildata
-{
-	char*name;
-	char*description;
-	GQueue*list;
-};
+			free(codeid);
+			free(data);
+			free(name);
+		      }
+		    
+		    char*drinklistcat=g_strjoinv(NULL,drinklist);
+		    g_strfreev(drinklist);
+		    char*drinklistcatXML=g_strconcat(drinkliststart,drinklistcat,drinklistend,NULL);
+		    Clist[i]=g_strconcat(cocktailstart,XMLname,XMLdescription,drinklistcatXML,cocktailend,NULL);
+		    free(XMLname);
+		    free(XMLdescription);
+		    free(drinklistcat);
+		    free(drinklistcatXML);
+		  }
+		char*cocktaildatastringfull=g_strjoinv(NULL,Clist);
+		g_strfreev(Clist);
+		char*cocktailXMLfull=g_strconcat(datacocktailstart,cocktaildatastringfull,datacocktailend,NULL);
+		free(cocktaildatastringfull);		 
+		//end of cocktail marshall
+		fprintf(file,"%s%s%s%s",datastart,ls,cocktailXMLfull,dataend);
+		free(cocktailXMLfull);
+		free(ls);
+		for(unsigned int i=0;i<k;i++)
+		  {
+		    free(list[i]);
+		  }
+		free(datastart);
+		fclose(file);
+		free(path);
+		gtk_widget_hide(filechooserdialog1);
+}
 
 void codetab_callback(GtkWidget*widget,gpointer data)
 {
@@ -414,7 +470,12 @@ void comboboxtext2_callback()
 				}
 		}
 }
-
+void freecodedata(gpointer data)
+{
+  struct codedata*codedata=(struct codedata*)data;
+  free(codedata->data);
+  free(codedata->name);
+}
 void button4_callback()
 {
 	GtkComboBox*comboboxtext2=(GtkComboBox*)gtk_builder_get_object(interface,"comboboxtext2");
@@ -424,7 +485,13 @@ void button4_callback()
 			//delete cocktail
 			struct cocktaildata*dataqueue=(struct cocktaildata*)g_queue_pop_nth(Q2,CBBindex);
 			if(dataqueue)
-				free(dataqueue);
+			  {
+			    free(dataqueue->name);
+			    free(dataqueue->description);
+			    g_queue_free_full(dataqueue->list,freecodedata);
+			    g_queue_free(dataqueue->list);
+			    free(dataqueue);//doesn't free ?
+			  }
 
 			if(g_queue_is_empty(Q2))
 				l=0;
